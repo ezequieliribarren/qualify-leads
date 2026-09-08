@@ -23,13 +23,13 @@ async function main() {
   await prisma.user.deleteMany();
 
   // ── Usuarios ─────────────────────────────────────────────
-  const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "admin@local.test").toLowerCase();
-  const vendedorEmail = (process.env.SEED_VENDEDOR_EMAIL ?? "vendedor@local.test").toLowerCase();
+  const adminUser = (process.env.SEED_ADMIN_USUARIO ?? "admin").toLowerCase();
+  const vendedorUser = (process.env.SEED_VENDEDOR_USUARIO ?? "vendedor").toLowerCase();
 
   const admin = await prisma.user.create({
     data: {
       name: "Admin",
-      email: adminEmail,
+      email: adminUser,
       password: await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD ?? "admin1234", 10),
       role: "admin",
     },
@@ -37,7 +37,7 @@ async function main() {
   const vendedor = await prisma.user.create({
     data: {
       name: "Vendedor",
-      email: vendedorEmail,
+      email: vendedorUser,
       password: await bcrypt.hash(process.env.SEED_VENDEDOR_PASSWORD ?? "vende1234", 10),
       role: "vendedor",
     },
@@ -175,8 +175,8 @@ async function main() {
   });
 
   console.log("✅ Seed listo.");
-  console.log(`   Admin:    ${admin.email} / ${process.env.SEED_ADMIN_PASSWORD ?? "admin1234"}`);
-  console.log(`   Vendedor: ${vendedor.email} / ${process.env.SEED_VENDEDOR_PASSWORD ?? "vende1234"}`);
+  console.log(`   Admin:    usuario "${admin.email}" / ${process.env.SEED_ADMIN_PASSWORD ?? "admin1234"}`);
+  console.log(`   Vendedor: usuario "${vendedor.email}" / ${process.env.SEED_VENDEDOR_PASSWORD ?? "vende1234"}`);
 }
 
 main()

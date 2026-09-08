@@ -52,10 +52,10 @@ npm run dev
 
 Abrí http://localhost:3000 e ingresá con los usuarios del seed:
 
-| Rol      | Email                  | Contraseña  |
-|----------|------------------------|-------------|
-| Admin    | `admin@local.test`     | `admin1234` |
-| Vendedor | `vendedor@local.test`  | `vende1234` |
+| Rol      | Usuario    | Contraseña  |
+|----------|------------|-------------|
+| Admin    | `admin`    | `admin1234` |
+| Vendedor | `vendedor` | `vende1234` |
 
 (Se pueden cambiar en `.env` antes de correr el seed.)
 
@@ -82,7 +82,7 @@ registradas (una genera una tarea de remarketing de sublimación **ya vencida**,
 | `NEXTAUTH_SECRET`         | Firma de sesiones. **Obligatoria** (texto largo al azar)      |
 | `NEXTAUTH_URL`            | URL pública de la app (local: `http://localhost:3000`)        |
 | `EVOLUTION_WEBHOOK_TOKEN` | Token que valida el webhook de Evolution API                  |
-| `SEED_*`                  | Email/clave de los usuarios que crea el seed                  |
+| `SEED_*`                  | Usuario/clave de los usuarios que crea el seed                |
 
 ### SQLite / MySQL: se elige solo
 
@@ -146,13 +146,13 @@ Listo. El `.env` no se sube (está en `.gitignore`); `.env.example` sí, como pl
 | `NEXTAUTH_SECRET` | un texto largo al azar (`openssl rand -base64 32`) |
 | `NEXTAUTH_URL` | `https://TU-DOMINIO` (la URL real del sitio, sin `/` al final) |
 | `EVOLUTION_WEBHOOK_TOKEN` | un texto largo al azar (lo vas a usar al conectar WhatsApp) |
-| `SEED_VENDEDOR_EMAIL` | email para el login del vendedor |
+| `SEED_VENDEDOR_USUARIO` | usuario para el login del vendedor (texto simple, ej. `vendedor`) |
 | `SEED_VENDEDOR_PASSWORD` | contraseña de ese login (podés borrar esta variable después del primer deploy) |
 
 ### 4. Deploy
 
 Hostinger corre el build (crea las tablas + el usuario) y levanta la app. Entrá a
-`https://TU-DOMINIO` y logueate con `SEED_VENDEDOR_EMAIL` / `SEED_VENDEDOR_PASSWORD`.
+`https://TU-DOMINIO` y logueate con `SEED_VENDEDOR_USUARIO` / `SEED_VENDEDOR_PASSWORD`.
 
 Cada `git push` a `main` vuelve a desplegar. Las tablas se sincronizan solas; el usuario no
 se vuelve a crear.

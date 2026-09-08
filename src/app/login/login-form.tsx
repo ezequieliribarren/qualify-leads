@@ -19,13 +19,13 @@ export function LoginForm() {
     setError(null);
     const data = new FormData(e.currentTarget);
     const res = await signIn("credentials", {
-      email: String(data.get("email")),
+      usuario: String(data.get("usuario")),
       password: String(data.get("password")),
       redirect: false,
     });
     setLoading(false);
     if (res?.error) {
-      setError("Email o contraseña incorrectos.");
+      setError("Usuario o contraseña incorrectos.");
       return;
     }
     router.push("/leads");
@@ -37,8 +37,8 @@ export function LoginForm() {
       <CardContent className="pt-6">
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" autoComplete="username" required />
+            <Label htmlFor="usuario">Usuario</Label>
+            <Input id="usuario" name="usuario" type="text" autoComplete="username" required autoFocus />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Contraseña</Label>

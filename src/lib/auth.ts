@@ -11,13 +11,15 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credenciales",
       credentials: {
-        email: { label: "Email", type: "email" },
+        usuario: { label: "Usuario", type: "text" },
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.usuario || !credentials?.password) return null;
+        // El campo `email` de la tabla User guarda el nombre de usuario
+        // (puede ser un email o un texto simple como "vendedor"). Es único.
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
+          where: { email: credentials.usuario.toLowerCase().trim() },
         });
         if (!user) return null;
         const ok = await bcrypt.compare(credentials.password, user.password);

@@ -21,14 +21,14 @@ async function main() {
     return;
   }
 
-  const vendedorEmail = (process.env.SEED_VENDEDOR_EMAIL ?? "").toLowerCase().trim();
+  const vendedorUser = (process.env.SEED_VENDEDOR_USUARIO ?? "").toLowerCase().trim();
   const vendedorPass = process.env.SEED_VENDEDOR_PASSWORD ?? "";
-  const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "").toLowerCase().trim();
+  const adminUser = (process.env.SEED_ADMIN_USUARIO ?? "").toLowerCase().trim();
   const adminPass = process.env.SEED_ADMIN_PASSWORD ?? "";
 
-  if (!vendedorEmail || !vendedorPass) {
+  if (!vendedorUser || !vendedorPass) {
     console.warn(
-      "[seed-prod] Base vacía pero faltan SEED_VENDEDOR_EMAIL / SEED_VENDEDOR_PASSWORD. " +
+      "[seed-prod] Base vacía pero faltan SEED_VENDEDOR_USUARIO / SEED_VENDEDOR_PASSWORD. " +
         "Cargá esas variables en el panel y volvé a deployar.",
     );
     return;
@@ -37,23 +37,23 @@ async function main() {
   await prisma.user.create({
     data: {
       name: "Vendedor",
-      email: vendedorEmail,
+      email: vendedorUser,
       password: await bcrypt.hash(vendedorPass, 10),
       role: "vendedor",
     },
   });
-  console.log(`[seed-prod] Usuario vendedor creado: ${vendedorEmail}`);
+  console.log(`[seed-prod] Usuario vendedor creado: ${vendedorUser}`);
 
-  if (adminEmail && adminPass && adminEmail !== vendedorEmail) {
+  if (adminUser && adminPass && adminUser !== vendedorUser) {
     await prisma.user.create({
       data: {
         name: "Admin",
-        email: adminEmail,
+        email: adminUser,
         password: await bcrypt.hash(adminPass, 10),
         role: "admin",
       },
     });
-    console.log(`[seed-prod] Usuario admin creado: ${adminEmail}`);
+    console.log(`[seed-prod] Usuario admin creado: ${adminUser}`);
   }
 }
 
