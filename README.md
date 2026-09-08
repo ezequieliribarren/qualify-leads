@@ -1,24 +1,24 @@
-# Dashboard de Leads de WhatsApp — MVP
+# Dashboard de Ventas — MVP
 
-Dashboard interno para ordenar los leads que llegan por WhatsApp y registrar las ventas
-que se cierran por ese canal. Pensado para **un vendedor** hoy, con el modelo de datos
-listo para escalar a varios.
+Panel interno para registrar las ventas realizadas y ver la facturación del vendedor.
+Pensado para **un vendedor** hoy, con el modelo de datos listo para escalar a varios.
+
+La parte de **Leads de WhatsApp** ya está construida pero queda en segundo plano hasta
+integrar Evolution API (ver más abajo).
 
 ## Qué hace
 
-- **Leads**: lista de todos los leads, filtro por estado, buscador, orden por "hace cuánto
-  no se toca" y resaltado de los que se están enfriando (7+ días sin novedad). Cambio de
-  estado en 1 click desde la tabla.
-- **Marcar como Ganado**: al pasar un lead a *Ganado* se abre un formulario (producto —
-  con alta rápida inline —, precio editable, fecha, tipo de entrega). Al guardar se crea la
-  venta con nombre y precio "congelados" y se generan los recordatorios de remarketing.
+- **Ventas** (pantalla principal): registro de ventas realizadas. "Nueva venta" pide
+  producto (se elige del catálogo o se escribe uno nuevo y se agrega solo), monto, fecha
+  (viene en hoy) y entrega. Cliente opcional. Se puede borrar una venta.
+- **Métricas**: facturación del mes vs. mes anterior, cantidad de ventas, ticket promedio,
+  **facturación por vendedor**, ranking de productos y gráfico de barras por día. Selector
+  de mes (últimos 12).
 - **Catálogo**: alta/edición de productos, precio base, categorías/tags, activar/desactivar.
-- **Remarketing**: pantalla tipo to-do con los recordatorios vencidos / de hoy. Muestra el
-  mensaje sugerido con botón de copiar y "abrir en WhatsApp". **Nunca envía mensajes solo.**
-  Reglas configurables desde `/remarketing/reglas`.
-- **Métricas**: facturación del mes vs. mes anterior, ventas ganadas, ticket promedio,
-  facturación por vendedor (agrupado), ranking de productos y gráfico de barras por día.
-  Selector de mes (últimos 12).
+- **Leads** *(segundo plano)*: lista de leads, filtro por estado, buscador, resaltado de
+  los que se enfrían. "Marcar como Ganado" registra la venta desde el lead.
+- **Remarketing** *(segundo plano)*: recordatorios post-venta con mensaje sugerido para
+  copiar/pegar en WhatsApp. **Nunca envía mensajes solo.** Reglas en `/remarketing/reglas`.
 
 ## Stack
 

@@ -11,3 +11,4 @@ prisma/schema.prisma
 *.log
 .DS_Store
 next-env.d.ts
+*.tsbuildinfo

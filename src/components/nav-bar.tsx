@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { MessageSquare, Package, BellRing, BarChart3, LogOut } from "lucide-react";
+import { ShoppingCart, BarChart3, Package, MessageSquare, BellRing, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const LINKS = [
-  { href: "/leads", label: "Leads", icon: MessageSquare },
-  { href: "/catalog", label: "Catálogo", icon: Package },
-  { href: "/remarketing", label: "Remarketing", icon: BellRing },
+  { href: "/ventas", label: "Ventas", icon: ShoppingCart },
   { href: "/metrics", label: "Métricas", icon: BarChart3 },
+  { href: "/catalog", label: "Catálogo", icon: Package },
+  { href: "/leads", label: "Leads", icon: MessageSquare },
+  { href: "/remarketing", label: "Remarketing", icon: BellRing },
 ];
 
 export function NavBar({
@@ -26,7 +27,7 @@ export function NavBar({
   return (
     <header className="border-b bg-card">
       <div className="container flex h-14 items-center gap-1">
-        <span className="mr-4 font-bold">📲 Leads</span>
+        <span className="mr-4 font-bold">🧾 Ventas</span>
         <nav className="flex items-center gap-1">
           {LINKS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");

@@ -107,5 +107,71 @@ export async function registerSale(input: z.infer<typeof saleSchema>) {
   revalidatePath(`/leads/${data.leadId}`);
   revalidatePath("/remarketing");
   revalidatePath("/metrics");
+  revalidatePath("/ventas");
   return { ok: true as const, ...created };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Venta directa (sin lead) — panel de ventas ya realizadas.
+// ─────────────────────────────────────────────────────────────
+
+const directSaleSchema = z.object({
+  // el producto se identifica por nombre; si no existe en el catálogo se crea
+  productName: z.string().trim().min(1).max(160),
+  finalPrice: z.coerce.number().min(0),
+  soldAt: z.string().optional(), // yyyy-mm-dd; si no viene, hoy
+  deliveryType: z.enum(DELIVERY_TYPES).optional(),
+  customerName: z.string().trim().max(160).optional(),
+  saveToCatalog: z.boolean().optional(),
+});
+
+export async function createSale(input: z.infer<typeof directSaleSchema>) {
+  const user = await requireUser();
+  const data = directSaleSchema.parse(input);
+
+  const soldAt = data.soldAt ? new Date(data.soldAt + "T12:00:00") : new Date();
+  if (Number.isNaN(soldAt.getTime())) return { ok: false as const, error: "Fecha inválida." };
+
+  // ¿el producto ya está en el catálogo? (match por nombre, sin distinguir may/min)
+  const catalog = await prisma.product.findMany({ select: { id: true, name: true } });
+  const match = catalog.find(
+    (p) => p.name.toLowerCase() === data.productName.toLowerCase(),
+  );
+
+  let productId: string | null = match?.id ?? null;
+  const productName = match?.name ?? data.productName;
+
+  // alta rápida al catálogo si no existe y se pidió guardarlo (o siempre, para tenerlo)
+  if (!productId && data.saveToCatalog !== false) {
+    const np = await prisma.product.create({
+      data: { name: data.productName, basePrice: data.finalPrice, category: "" },
+    });
+    productId = np.id;
+  }
+
+  const sale = await prisma.sale.create({
+    data: {
+      leadId: null,
+      customerName: data.customerName || null,
+      productId,
+      productName,
+      finalPrice: data.finalPrice,
+      soldAt,
+      deliveryType: data.deliveryType ?? "local",
+      sellerId: user.id,
+    },
+  });
+
+  revalidatePath("/ventas");
+  revalidatePath("/metrics");
+  revalidatePath("/catalog");
+  return { ok: true as const, saleId: sale.id };
+}
+
+export async function deleteSale(saleId: string) {
+  await requireUser();
+  await prisma.sale.delete({ where: { id: saleId } });
+  revalidatePath("/ventas");
+  revalidatePath("/metrics");
+  return { ok: true as const };
 }

@@ -33,8 +33,8 @@ export default async function RemarketingPage() {
     suggestedMessage: t.suggestedMessage,
     altMessages: t.altMessages ? t.altMessages.split("||").filter(Boolean) : [],
     contactedAt: t.contactedAt ? t.contactedAt.toISOString() : null,
-    leadName: t.sale.lead.name,
-    leadPhone: t.sale.lead.phone,
+    leadName: t.sale.lead?.name ?? t.sale.customerName ?? "Cliente",
+    leadPhone: t.sale.lead?.phone ?? "",
     productName: t.sale.productName,
     seller: t.sale.seller.name,
   });
@@ -61,7 +61,7 @@ export default async function RemarketingPage() {
         upcoming={upcoming.map(map)}
         recentDone={recentDone.map((t) => ({
           id: t.id,
-          leadName: t.sale.lead.name,
+          leadName: t.sale.lead?.name ?? t.sale.customerName ?? "Cliente",
           productName: t.sale.productName,
           contactedAt: t.contactedAt!.toISOString(),
         }))}

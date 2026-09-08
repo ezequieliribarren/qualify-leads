@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "Dashboard de Leads · WhatsApp",
-  description: "Gestión de leads de WhatsApp y ventas del canal",
+  title: "Dashboard de Ventas",
+  description: "Registro de ventas y métricas del vendedor",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

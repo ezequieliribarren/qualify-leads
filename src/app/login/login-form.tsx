@@ -28,7 +28,7 @@ export function LoginForm() {
       setError("Usuario o contraseña incorrectos.");
       return;
     }
-    router.push("/leads");
+    router.push("/ventas");
     router.refresh();
   }
 

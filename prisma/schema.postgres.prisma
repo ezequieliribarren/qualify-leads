@@ -79,8 +79,9 @@ model Product {
 
 model Sale {
   id            String   @id @default(cuid())
-  leadId        String
-  lead          Lead     @relation(fields: [leadId], references: [id])
+  leadId        String?
+  lead          Lead?    @relation(fields: [leadId], references: [id])
+  customerName  String?
 
   productId     String?
   product       Product? @relation(fields: [productId], references: [id])
@@ -91,7 +92,7 @@ model Sale {
 
   soldAt        DateTime @default(now())
   // "envio" | "local"
-  deliveryType  String
+  deliveryType  String   @default("local")
 
   sellerId      String
   seller        User     @relation(fields: [sellerId], references: [id])
