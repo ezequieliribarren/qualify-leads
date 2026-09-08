@@ -1,0 +1,128 @@
+// Dashboard de Leads de WhatsApp — schema para MySQL (Hostinger, PlanetScale, etc.)
+//
+// NO editar a mano el archivo prisma/schema.prisma: se genera solo a partir de
+// este archivo o de schema.sqlite.prisma según la DATABASE_URL
+// (ver scripts/pick-schema.mjs). Editá acá si querés cambiar el modelo para MySQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  // "admin" | "vendedor"
+  role      String   @default("vendedor")
+  createdAt DateTime @default(now())
+
+  leads Lead[]
+  sales Sale[]
+}
+
+model Lead {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String   @unique
+  // "nuevo" | "en_conversacion" | "cotizado" | "ganado" | "perdido"
+  status        String   @default("nuevo")
+  source        String   @default("whatsapp")
+  notes         String   @default("") @db.Text
+  createdAt     DateTime @default(now())
+  lastContactAt DateTime @default(now())
+
+  assignedToId String?
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id])
+
+  events LeadEvent[]
+  sales  Sale[]
+
+  @@index([status])
+  @@index([lastContactAt])
+}
+
+model LeadEvent {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  // "note" | "status_change" | "inbound_message" | "sale"
+  type      String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  name      String
+  basePrice Float
+  category  String   @default("")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  sales Sale[]
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  leadId        String
+  lead          Lead     @relation(fields: [leadId], references: [id])
+
+  productId     String?
+  product       Product? @relation(fields: [productId], references: [id])
+
+  productName   String
+  finalPrice    Float
+
+  soldAt        DateTime @default(now())
+  // "envio" | "local"
+  deliveryType  String
+
+  sellerId      String
+  seller        User     @relation(fields: [sellerId], references: [id])
+
+  createdAt     DateTime @default(now())
+
+  remarketingTasks RemarketingTask[]
+
+  @@index([soldAt])
+  @@index([sellerId])
+}
+
+model RemarketingRule {
+  id              String   @id @default(cuid())
+  name            String
+  category        String
+  daysAfter       Int
+  messageTemplate String   @db.Text
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model RemarketingTask {
+  id               String    @id @default(cuid())
+  saleId           String
+  sale             Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  // "delivery" | "rule"
+  kind             String
+  ruleId           String?
+
+  dueAt            DateTime
+  suggestedMessage String    @db.Text
+  altMessages      String    @default("") @db.Text
+
+  contactedAt      DateTime?
+
+  createdAt        DateTime  @default(now())
+
+  @@index([dueAt])
+  @@index([contactedAt])
+}
