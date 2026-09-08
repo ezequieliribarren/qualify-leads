@@ -115,47 +115,58 @@ Listo. El `.env` no se sube (está en `.gitignore`); `.env.example` sí, como pl
 
 ---
 
-## Desplegar en Hostinger (Node + MySQL) — paso a paso
+## Desplegar en Hostinger — paso a paso
 
-### 1. Crear la base de datos MySQL
+`npm run build` ya hace TODO: elige el schema según `DATABASE_URL`, genera el cliente,
+**crea/actualiza las tablas** (`prisma db push`), crea el usuario de login (solo si la base
+está vacía, a partir de las variables `SEED_*`) y compila. Es idempotente: en los deploys
+siguientes las tablas se sincronizan y el usuario no se vuelve a crear.
 
-1. hPanel → **Bases de datos** → **MySQL** → *Crear nueva base de datos*.
-2. Anotá: **nombre de la base**, **usuario**, **contraseña**, **host** (suele ser
-   `localhost` si la app corre en el mismo hosting, o el que indique el panel).
-3. Armá la URL:
-   `mysql://USUARIO:CONTRASEÑA@HOST:3306/NOMBRE_DB`
-   (si la contraseña tiene caracteres raros como `@` `#` `/`, cambialos por su código:
-   `@`→`%40`, `#`→`%23`, `/`→`%2F`).
+### 1. La base de datos
+
+**Opción recomendada — Neon (PostgreSQL, gratis, sin líos de host):**
+1. [neon.tech](https://neon.tech) → *New Project*.
+2. Botón *Connect* → copiá la connection string (`postgresql://...?sslmode=require`).
+3. Esa string es tu `DATABASE_URL`.
+
+**Opción MySQL de Hostinger:**
+1. hPanel → **Bases de datos** → **MySQL** → *Crear nueva base de datos*. Anotá nombre,
+   usuario, contraseña.
+2. URL: `mysql://USUARIO:CONTRASEÑA@localhost:3306/NOMBRE_DB`
+   (si la contraseña tiene `@ # / : ?`, escapalos: `@`→`%40`, `#`→`%23`, `/`→`%2F`,
+   `:`→`%3A`, `?`→`%3F`).
+3. Si el build no logra conectar, activá **Remote MySQL** en hPanel o probá con
+   `127.0.0.1` en vez de `localhost`. (Con Neon esto no pasa nunca.)
 
 ### 2. Conectar el repo de GitHub
 
-1. hPanel → tu sitio → **Node.js** (o **Avanzado → GitHub**) → conectá el repositorio y la
-   rama `main`.
+1. hPanel → tu sitio → **Node.js** → conectá el repositorio y la rama `main`.
 2. Versión de Node: **20** o superior.
-3. **Build command:** `npm install && npm run db:deploy && npm run build`
-   - `db:deploy` crea/actualiza las tablas (`prisma db push`) y, **solo si la base está
-     vacía**, crea el usuario de login a partir de las variables `SEED_*`. Es idempotente:
-     en los deploys siguientes no toca nada.
+3. **Build command:** `npm install && npm run build`  *(el default; no hace falta cambiarlo)*
 4. **Start command:** `npm start`
 
 ### 3. Variables de entorno (en el panel de Node.js de Hostinger)
 
 | Variable | Valor |
 |---|---|
-| `DATABASE_URL` | `mysql://USUARIO:CONTRASEÑA@HOST:3306/NOMBRE_DB` (datos del paso 1; `HOST` suele ser `localhost`) |
+| `DATABASE_URL` | la string del paso 1 (`postgresql://...` de Neon, o `mysql://...` de Hostinger) |
 | `NEXTAUTH_SECRET` | un texto largo al azar (`openssl rand -base64 32`) |
 | `NEXTAUTH_URL` | `https://TU-DOMINIO` (la URL real del sitio, sin `/` al final) |
 | `EVOLUTION_WEBHOOK_TOKEN` | un texto largo al azar (lo vas a usar al conectar WhatsApp) |
-| `SEED_VENDEDOR_USUARIO` | usuario para el login del vendedor (texto simple, ej. `vendedor`) |
-| `SEED_VENDEDOR_PASSWORD` | contraseña de ese login (podés borrar esta variable después del primer deploy) |
+| `SEED_VENDEDOR_USUARIO` | usuario para el login (texto simple, ej. `vendedor`) |
+| `SEED_VENDEDOR_PASSWORD` | contraseña de ese login (podés borrarla después del primer deploy) |
 
 ### 4. Deploy
 
-Hostinger corre el build (crea las tablas + el usuario) y levanta la app. Entrá a
-`https://TU-DOMINIO` y logueate con `SEED_VENDEDOR_USUARIO` / `SEED_VENDEDOR_PASSWORD`.
+Hostinger corre el build (crea tablas + usuario) y levanta la app. Entrá a `https://TU-DOMINIO`
+y logueate con `SEED_VENDEDOR_USUARIO` / `SEED_VENDEDOR_PASSWORD`.
 
-Cada `git push` a `main` vuelve a desplegar. Las tablas se sincronizan solas; el usuario no
-se vuelve a crear.
+**Si el login da 401:** la base quedó sin tablas o sin usuario. Mirá el log del deploy:
+- `[pick-schema] PostgreSQL` / `MySQL` / `SQLite` — si dice SQLite, tu `DATABASE_URL` está mal.
+- Error de `prisma db push` — la `DATABASE_URL` no conecta (usuario/clave/host).
+- `[seed-prod] Usuario vendedor creado` — ok. Si dice que faltan variables, agregá los `SEED_*`.
+- `[seed-prod] Ya hay N usuario(s)` — el usuario existe; fijate en phpMyAdmin / Neon el valor
+  de la columna `email` de la tabla `User`: ese es tu usuario de login.
 
 > **Cambiar la contraseña más adelante:** el MVP no tiene pantalla para eso. Se hace desde
 > **phpMyAdmin** (hPanel → Bases de datos → *Acceder a phpMyAdmin*) editando la fila en la

@@ -1,0 +1,139 @@
+// Dashboard de Leads de WhatsApp — schema para PostgreSQL (Neon, Supabase, etc.).
+//
+// NO editar a mano prisma/schema.prisma: se genera solo a partir de este archivo
+// o de schema.mysql.prisma según la DATABASE_URL (ver scripts/pick-schema.mjs).
+//   - file:./dev.db        -> usa este (SQLite)
+//   - mysql://...          -> usa schema.mysql.prisma
+//
+// No se usan enums nativos ni columnas array: los "enums" son strings validados
+// en src/lib/enums.ts y las categorías de producto son un string con comas.
+// Así el mismo código corre en SQLite y en MySQL sin cambios.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  // "admin" | "vendedor"  (pensado para escalar a varios vendedores)
+  role      String   @default("vendedor")
+  createdAt DateTime @default(now())
+
+  leads Lead[]
+  sales Sale[]
+}
+
+model Lead {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String   @unique // viene de WhatsApp
+  // "nuevo" | "en_conversacion" | "cotizado" | "ganado" | "perdido"
+  status        String   @default("nuevo")
+  source        String   @default("whatsapp")
+  notes         String   @default("") // historial libre (texto plano, más reciente arriba)
+  createdAt     DateTime @default(now())
+  lastContactAt DateTime @default(now())
+
+  assignedToId String?
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id])
+
+  events LeadEvent[]
+  sales  Sale[]
+
+  @@index([status])
+  @@index([lastContactAt])
+}
+
+// Historial estructurado del lead (cambios de estado, mensajes entrantes, notas)
+model LeadEvent {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  // "note" | "status_change" | "inbound_message" | "sale"
+  type      String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  name      String
+  basePrice Float
+  // tags/categorías separadas por coma, ej: "sublimacion,estampado"
+  category  String   @default("")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  sales Sale[]
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  leadId        String
+  lead          Lead     @relation(fields: [leadId], references: [id])
+
+  productId     String?
+  product       Product? @relation(fields: [productId], references: [id])
+
+  // valores "congelados" al momento de la venta
+  productName   String
+  finalPrice    Float
+
+  soldAt        DateTime @default(now())
+  // "envio" | "local"
+  deliveryType  String
+
+  sellerId      String
+  seller        User     @relation(fields: [sellerId], references: [id])
+
+  createdAt     DateTime @default(now())
+
+  remarketingTasks RemarketingTask[]
+
+  @@index([soldAt])
+  @@index([sellerId])
+}
+
+// Reglas configurables desde el dashboard (dato, no código).
+// "si el producto tiene la categoría X -> a los N días -> sugerí este texto"
+model RemarketingRule {
+  id            String   @id @default(cuid())
+  name          String
+  category      String   // matchea contra Product.category (contains)
+  daysAfter     Int
+  messageTemplate String // admite {nombre} y {producto}
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model RemarketingTask {
+  id          String   @id @default(cuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  // "delivery" (regla fija por tipo de entrega) | "rule" (RemarketingRule)
+  kind        String
+  ruleId      String?  // RemarketingRule.id si kind = "rule"
+
+  dueAt       DateTime
+  suggestedMessage String
+  // sugerencias alternativas, separadas por "||"
+  altMessages String   @default("")
+
+  contactedAt DateTime?
+
+  createdAt   DateTime @default(now())
+
+  @@index([dueAt])
+  @@index([contactedAt])
+}
