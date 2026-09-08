@@ -11,6 +11,8 @@
     "postinstall": "npm run schema && prisma generate",
     "db:push": "npm run schema && prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:prod": "tsx prisma/seed-prod.ts",
+    "db:deploy": "npm run schema && prisma db push && npm run db:seed:prod",
     "db:reset": "npm run schema && prisma db push --force-reset && tsx prisma/seed.ts",
     "db:studio": "npm run schema && prisma studio"
   },

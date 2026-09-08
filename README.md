@@ -132,46 +132,38 @@ Listo. El `.env` no se sube (está en `.gitignore`); `.env.example` sí, como pl
 1. hPanel → tu sitio → **Node.js** (o **Avanzado → GitHub**) → conectá el repositorio y la
    rama `main`.
 2. Versión de Node: **20** o superior.
-3. **Build command:** `npm install && npm run build`
+3. **Build command:** `npm install && npm run db:deploy && npm run build`
+   - `db:deploy` crea/actualiza las tablas (`prisma db push`) y, **solo si la base está
+     vacía**, crea el usuario de login a partir de las variables `SEED_*`. Es idempotente:
+     en los deploys siguientes no toca nada.
 4. **Start command:** `npm start`
 
 ### 3. Variables de entorno (en el panel de Node.js de Hostinger)
 
 | Variable | Valor |
 |---|---|
-| `DATABASE_URL` | `mysql://USUARIO:CONTRASEÑA@HOST:3306/NOMBRE_DB` (paso 1) |
+| `DATABASE_URL` | `mysql://USUARIO:CONTRASEÑA@HOST:3306/NOMBRE_DB` (datos del paso 1; `HOST` suele ser `localhost`) |
 | `NEXTAUTH_SECRET` | un texto largo al azar (`openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | `https://TU-DOMINIO` (el dominio real del sitio) |
+| `NEXTAUTH_URL` | `https://TU-DOMINIO` (la URL real del sitio, sin `/` al final) |
 | `EVOLUTION_WEBHOOK_TOKEN` | un texto largo al azar (lo vas a usar al conectar WhatsApp) |
+| `SEED_VENDEDOR_EMAIL` | email para el login del vendedor |
+| `SEED_VENDEDOR_PASSWORD` | contraseña de ese login (podés borrar esta variable después del primer deploy) |
 
-### 4. Crear las tablas y el usuario del vendedor (una sola vez)
+### 4. Deploy
 
-Desde **tu computadora**, apuntando a la base de Hostinger:
+Hostinger corre el build (crea las tablas + el usuario) y levanta la app. Entrá a
+`https://TU-DOMINIO` y logueate con `SEED_VENDEDOR_EMAIL` / `SEED_VENDEDOR_PASSWORD`.
 
-```bash
-# 1. poné temporalmente la URL de Hostinger en tu .env (o exportala):
-#    DATABASE_URL="mysql://USUARIO:CONTRASEÑA@HOST:3306/NOMBRE_DB"
+Cada `git push` a `main` vuelve a desplegar. Las tablas se sincronizan solas; el usuario no
+se vuelve a crear.
 
-npm run db:push     # crea las tablas en la DB de Hostinger
-npm run db:seed     # crea usuarios + datos de ejemplo
+> **Cambiar la contraseña más adelante:** el MVP no tiene pantalla para eso. Se hace desde
+> **phpMyAdmin** (hPanel → Bases de datos → *Acceder a phpMyAdmin*) editando la fila en la
+> tabla `User`, o con `npm run db:studio` apuntando a la base de Hostinger.
 
-# 2. volvé tu .env a  file:./dev.db  para seguir laburando local
-```
-
-> Si Hostinger no permite conexiones MySQL externas, activá *Remote MySQL* en hPanel
-> agregando tu IP, o corré esos comandos desde la consola SSH del plan.
-
-Después **cambiá las contraseñas** de los usuarios (entrá al dashboard, o `npm run db:studio`).
-
-### 5. Deploy
-
-Hostinger hace el build y levanta la app. Cada `git push` a `main` vuelve a desplegar.
-Entrá a `https://TU-DOMINIO`, login con el usuario del vendedor.
-
-> **Alternativa Vercel:** mismo flujo — importás el repo, cargás las 4 variables, y para las
-> tablas corrés el paso 4 igual. Con `DATABASE_URL` tipo `mysql://` (Hostinger) o de un
-> Postgres gestionado (Neon/Supabase) — en ese caso poné la URL `postgresql://...` y agregá
-> un `prisma/schema.postgres.prisma`; para MySQL no hace falta nada.
+> **Alternativa Vercel:** mismo flujo — importás el repo, cargás las variables, y en
+> *Settings → Build & Development → Build Command* ponés
+> `npm run db:deploy && npm run build`.
 
 ---
 
